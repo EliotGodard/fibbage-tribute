@@ -17,7 +17,7 @@ jQuery(function($){
          * to the Socket.IO server
          */
         init: function() {
-            IO.socket = io.connect();
+            IO.socket = io();
             IO.bindEvents();
         },
 
@@ -36,7 +36,7 @@ jQuery(function($){
             IO.socket.on('hostSavePloy', IO.hostSavePloy);
             IO.socket.on('hostLaunchGame', IO.hostLaunchGame);
             IO.socket.on('gameOver', IO.gameOver);
-            IO.socket.on('error', IO.error );
+            IO.socket.on('err', IO.error );
         },
 
         /**
@@ -44,7 +44,7 @@ jQuery(function($){
          */
         onConnected : function() {
             // Cache a copy of the client's socket.IO session ID on the App
-            App.sessionId = IO.socket.socket.sessionid;
+            App.sessionId = IO.socket.id;
 
             console.log("Successfully connected. Session ID : " + App.sessionId);
         },
@@ -743,7 +743,7 @@ jQuery(function($){
              * @param data
              */
             updateWaitingScreen : function(data) {
-                if(IO.socket.socket.sessionid === data.playerId){
+                if(IO.socket.id === data.playerId){
                     App.role = 'Player';
                     App.gameId = data.gameId;
 

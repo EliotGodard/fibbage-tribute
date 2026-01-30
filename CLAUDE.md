@@ -6,7 +6,7 @@ Fibbage Tribute is a multiplayer party game (inspired by Fibbage from JackBox Pa
 
 ## Tech Stack
 
-- **Backend:** Node.js, Express 3.x, Socket.IO 0.9
+- **Backend:** Node.js, Express 5.x, Socket.IO 4.x
 - **Frontend:** jQuery 2.0.2, vanilla JS (ES5), Handlebars-style templates in HTML
 - **External API:** Questions fetched from `fibbage-tribute-questions.herokuapp.com`
 

@@ -1,7 +1,6 @@
 var io;
 var gameSocket;
 
-const request = require("request");
 var Config = require('./public/config.json');
 
 var questions = [];
@@ -63,16 +62,18 @@ function hostPrepareGame(data) {
 
     const url = 'https://fibbage-tribute-questions.herokuapp.com/question/random/' + Config.nbRounds + '?lan=' + data.language;
     console.log(url);
-    request.get(url, (error, response, body) => {
-        if(error) {
-            return console.dir(error);
-        }
-        questions = JSON.parse(body);
-        console.log("Questions :", questions);
+    fetch(url)
+        .then(function(response) { return response.json(); })
+        .then(function(body) {
+            questions = body;
+            console.log("Questions :", questions);
 
-        //console.log("All Players Present. Preparing game...");
-        io.sockets.in(data.gameId).emit('beginNewGame', data);
-    });
+            //console.log("All Players Present. Preparing game...");
+            io.sockets.in(data.gameId).emit('beginNewGame', data);
+        })
+        .catch(function(error) {
+            console.dir(error);
+        });
 }
 
 /*
@@ -135,8 +136,8 @@ function playerJoinGame(data) {
     // A reference to the player's Socket.IO socket object
     var sock = this;
 
-    // Look up the room ID in the Socket.IO manager object.
-    var room = gameSocket.manager.rooms["/" + data.gameId];
+    // Look up the room ID in the Socket.IO adapter.
+    var room = io.sockets.adapter.rooms.get(data.gameId.toString());
 
     // If the room exists...
     if( room != undefined ){
@@ -153,7 +154,7 @@ function playerJoinGame(data) {
 
     } else {
         // Otherwise, send an error message back to the player.
-        this.emit('error',{message: "This room does not exist."} );
+        this.emit('err',{message: "This room does not exist."} );
     }
 }
 
