@@ -6,7 +6,8 @@ var Config = require('./public/config.json');
 
 const NODE_ENV = process.env.NODE_ENV || 'dev';
 
-var questions = [];
+// Store game state per gameId to support multiple simultaneous games
+var gameStates = new Map();
 
 /**
  * This function is called by index.js to initialize a new game instance.
@@ -47,6 +48,12 @@ function hostCreateNewGame() {
     // Create a unique Socket.IO Room
     var thisGameId = ( Math.random() * 100000 ) | 0;
 
+    // Initialize game state for this room
+    gameStates.set(thisGameId, {
+        questions: [],
+        round: 0
+    });
+
     // Return the Room ID (gameId) and the socket ID (mySocketId) to the browser client
     this.emit('newGameCreated', {gameId: thisGameId, mySocketId: this.id});
 
@@ -70,8 +77,16 @@ function hostPrepareGame(data) {
         if(error) {
             return console.dir(error);
         }
-        questions = JSON.parse(body);
-        console.log("Questions :", questions);
+
+        // Store questions in the game-specific state
+        const gameState = gameStates.get(data.gameId);
+        if (gameState) {
+            gameState.questions = JSON.parse(body);
+            console.log("Questions for game", data.gameId, ":", gameState.questions);
+        } else {
+            console.error("Game state not found for gameId:", data.gameId);
+            return;
+        }
 
         //console.log("All Players Present. Preparing game...");
         io.sockets.in(data.gameId).emit('beginNewGame', data);
@@ -92,12 +107,21 @@ function hostStartGame(gameId) {
  * @param data Sent from the client. Contains the current round and gameId (room)
  */
 function hostNextRound(data) {
-    if(data.round < questions.length ){
+    const gameState = gameStates.get(data.gameId);
+    if (!gameState) {
+        console.error("Game state not found for gameId:", data.gameId);
+        return;
+    }
+
+    if(data.round < gameState.questions.length ){
         // Send a new set of words back to the host and players.
         sendQuestion(data.round, data.gameId);
     } else {
         // If the current round exceeds the number of words, send the 'gameOver' event.
         io.sockets.in(data.gameId).emit('gameOver',data);
+        // Clean up game state when game is over
+        gameStates.delete(data.gameId);
+        console.log("Game", data.gameId, "ended. State cleaned up.");
     }
 }
 
@@ -226,7 +250,13 @@ function sendQuestion(wordPoolIndex, gameId) {
         io.sockets.in(gameId).emit('newQuestion', json);
     });
     */
-    var json = questions[wordPoolIndex];
+    const gameState = gameStates.get(gameId);
+    if (!gameState) {
+        console.error("Game state not found for gameId:", gameId);
+        return;
+    }
+
+    var json = gameState.questions[wordPoolIndex];
     json.answer = json.solution;
     json.round = wordPoolIndex;
     io.sockets.in(gameId).emit('newQuestion', json);
