@@ -1,6 +1,6 @@
 {
-  "name": "Anagrammatix",
-  "description": "Anagram Multiplayer Game",
+  "name": "Fibbage-Tribute",
+  "description": "Fibbage Multiplayer Game Tribute",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -16,12 +16,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ericterpstra/anagrammatix.git"
+    "url": "https://github.com/EliotGodard/fibbage-tribute.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/ericterpstra/anagrammatix/issues"
+    "url": "https://github.com/EliotGodard/fibbage-tribute/issues"
   },
-  "homepage": "https://github.com/ericterpstra/anagrammatix"
+  "homepage": "https://github.com/EliotGodard/fibbage-tribute"
 }
