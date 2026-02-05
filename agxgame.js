@@ -68,7 +68,12 @@ function hostPrepareGame(data) {
     console.log(url);
     request.get(url, (error, response, body) => {
         if(error) {
-            return console.dir(error);
+            console.dir(error);
+            // Emit error event to the room so host and players can see the error
+            io.sockets.in(data.gameId).emit('error', {
+                message: 'Failed to load questions. Please try again.'
+            });
+            return;
         }
         questions = JSON.parse(body);
         console.log("Questions :", questions);
