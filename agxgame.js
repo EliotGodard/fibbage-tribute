@@ -1,10 +1,13 @@
 var io;
 var gameSocket;
 
-const request = require("request");
 var Config = require('./public/config.json');
 
-const NODE_ENV = process.env.NODE_ENV || 'dev';
+// Load local question banks
+var questionBanks = {
+    en: require('./questions/en.json'),
+    fr: require('./questions/fr.json')
+};
 
 var questions = [];
 
@@ -63,19 +66,15 @@ function hostPrepareGame(data) {
 
     data.mySocketId = sock.id;
 
-    const domain = NODE_ENV == 'prod' ? 'https://fibbage-tribute-questions.herokuapp.com' : 'http://localhost:3000'
-    const url = domain + '/question/random/' + Config.nbRounds + '?lan=' + data.language;
-    console.log(url);
-    request.get(url, (error, response, body) => {
-        if(error) {
-            return console.dir(error);
-        }
-        questions = JSON.parse(body);
-        console.log("Questions :", questions);
+    var language = data.language || 'en';
+    var bank = questionBanks[language] || questionBanks['en'];
 
-        //console.log("All Players Present. Preparing game...");
-        io.sockets.in(data.gameId).emit('beginNewGame', data);
-    });
+    // Shuffle and pick nbRounds questions from the local bank
+    var shuffled = shuffle(bank.slice());
+    questions = shuffled.slice(0, Config.nbRounds);
+    console.log("Questions :", questions);
+
+    io.sockets.in(data.gameId).emit('beginNewGame', data);
 }
 
 /*
@@ -213,19 +212,6 @@ function playerRestart(data) {
  * @param gameId The room identifier
  */
 function sendQuestion(wordPoolIndex, gameId) {
-    /*
-    const url = 'https://fibbage-tribute-questions.herokuapp.com/question/random?lan=' + Config.language;
-    request.get(url, (error, response, body) => {
-        if(error) {
-            return console.dir(error);
-        }
-        let json = JSON.parse(body);
-        json.answer = json.solution;
-        json.round = wordPoolIndex;
-
-        io.sockets.in(gameId).emit('newQuestion', json);
-    });
-    */
     var json = questions[wordPoolIndex];
     json.answer = json.solution;
     json.round = wordPoolIndex;
